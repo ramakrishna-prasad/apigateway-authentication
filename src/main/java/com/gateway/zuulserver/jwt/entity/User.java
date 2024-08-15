@@ -1,4 +1,4 @@
-package com.gateway.zuulserver.entity;
+package com.gateway.zuulserver.jwt.entity;
 
 import java.util.Set;
 
@@ -22,9 +22,7 @@ import lombok.Setter;
 public class User {
 	@Id
 	private String username;
-	private String firstName;
-	private String lastName;
-	private String userPassword;
+	private String password;
 
 	@ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
 	@JoinTable(name = "USER_ROLE", joinColumns = {
@@ -33,5 +31,10 @@ public class User {
 
 					@JoinColumn(name = "ROLE_ID") })
 	private Set<Role> roles;
+
+	public enum RoleName {
+
+		USER, ADMIN
+	}
 
 }
