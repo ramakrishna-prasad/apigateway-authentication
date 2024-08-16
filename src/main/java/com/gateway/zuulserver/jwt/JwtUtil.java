@@ -3,6 +3,8 @@ package com.gateway.zuulserver.jwt;
 import java.util.Date;
 import java.util.function.Function;
 
+import javax.crypto.SecretKey;
+
 import org.springframework.security.core.userdetails.UserDetails;
 
 import io.jsonwebtoken.Claims;
@@ -10,7 +12,6 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
@@ -19,8 +20,7 @@ import java.util.Map;
 @Component
 public class JwtUtil {
 
-	@Value("${jwt.secret}")
-	private String secret;
+	private static final SecretKey KEY = Keys.secretKeyFor(SignatureAlgorithm.HS256);
 
 	public String extractUsername(String token) {
 		return extractClaim(token, Claims::getSubject);
@@ -32,8 +32,7 @@ public class JwtUtil {
 	}
 
 	public Claims extractAllClaims(String token) {
-		return Jwts.parserBuilder().setSigningKey(Keys.hmacShaKeyFor(secret.getBytes())).build().parseClaimsJws(token)
-				.getBody();
+		return Jwts.parserBuilder().setSigningKey(KEY).build().parseClaimsJws(token).getBody();
 	}
 
 	public Boolean validateToken(String token, UserDetails userDetails) {
@@ -57,6 +56,6 @@ public class JwtUtil {
 	private String createToken(Map<String, Object> claims, String subject) {
 		return Jwts.builder().setClaims(claims).setSubject(subject).setIssuedAt(new Date())
 				.setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10))
-				.signWith(Keys.hmacShaKeyFor(secret.getBytes()), SignatureAlgorithm.HS256).compact();
+				.signWith(KEY, SignatureAlgorithm.HS256).compact();
 	}
 }

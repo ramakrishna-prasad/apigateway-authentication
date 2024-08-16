@@ -3,7 +3,9 @@ package com.gateway.zuulserver.jwt.controller;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -25,6 +27,7 @@ import jakarta.annotation.PostConstruct;
 @RestController
 @RequestMapping("/api/v1/")
 public class AuthController {
+	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(AuthController.class);
 
 	@Autowired
 	private JwtService jwtService;
@@ -36,6 +39,7 @@ public class AuthController {
 	private RoleRepository roleRepository;
 
 	@Autowired
+    @Qualifier("bcryptEncoder")
 	private PasswordEncoder passwordEncoder;
 
 	@PostConstruct
@@ -53,8 +57,10 @@ public class AuthController {
 	public ResponseEntity<?> createAuthenticationToken(@RequestBody AuthRequestDTO authenticationRequest)
 			throws Exception {
 		final String jwt = jwtService.createJwtToken(authenticationRequest);
+		logger.debug("JWT access token has been created", jwt);
 		return ResponseEntity.ok(new JwtResponseDTO(jwt));
 	}
+
 
 	@PostMapping("/signup")
 	public ResponseEntity<?> registerUser(@RequestBody AuthRequestDTO authenticationRequest) {
@@ -63,8 +69,8 @@ public class AuthController {
 		}
 		User user = new User();
 		user.setUsername(authenticationRequest.getUsername());
-		user.setPassword(passwordEncoder.encode(authenticationRequest.getPassword()));
-
+		String encodedPassword = passwordEncoder.encode(authenticationRequest.getPassword());
+		user.setPassword(encodedPassword);
 		Set<Role> roles = new HashSet<>();
 		Role userRole = roleRepository.findByName(RoleName.USER)
 				.orElseThrow(() -> new RuntimeException("User role not found"));
@@ -78,6 +84,7 @@ public class AuthController {
 
 		user.setRoles(roles);
 		userService.save(user);
+		logger.debug("User is successfully saved.");
 		return ResponseEntity.ok("User registered successfully.");
 	}
 }

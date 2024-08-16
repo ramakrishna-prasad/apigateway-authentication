@@ -18,6 +18,7 @@ public class JwtService {
 	@Autowired
 	private UserDetailsServiceImpl userDetailsService;
 
+
 	@Autowired
 	private JwtUtil jwtUtil;
 
