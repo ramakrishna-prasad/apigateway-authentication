@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -19,7 +20,7 @@ import com.gateway.zuulserver.jwt.service.UserDetailsServiceImpl;
 
 @Configuration
 @EnableWebSecurity
-//@EnableMethodSecurity(prePostEnabled = true)
+@EnableMethodSecurity
 public class SecurityConfig {
 
 	@Autowired
@@ -32,11 +33,14 @@ public class SecurityConfig {
 	@Bean
 	SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		return http.csrf(csrf -> csrf.disable()) // Disable CSRF protection
-				.authorizeHttpRequests(authorizeRequests -> authorizeRequests
-						.requestMatchers("/api/v1/signup", "/public/**").permitAll() // Allow access to signup and
-						.requestMatchers("/api/v1/login", "/public/**").permitAll() // public endpoints without
-						// authentication
-						.anyRequest().authenticated() // Require authentication for all other endpoints
+				.authorizeHttpRequests(
+						authorizeRequests -> authorizeRequests.requestMatchers("/api/v1/signup").permitAll() // Allow
+																												// access
+																												// to
+																												// signup
+								.requestMatchers("/api/v1/login").permitAll() // Allow access to login
+								.anyRequest().authenticated() // Require authentication for all other endpoints
+				// Require authentication for all other endpoints
 				).sessionManagement(
 						sessionManagement -> sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS) // Use
 																														// stateless
@@ -45,9 +49,11 @@ public class SecurityConfig {
 																								// filter
 				.build(); // Build the SecurityFilterChain
 	}
+	
+
 
 	@Bean
-    @Qualifier("bcryptEncoder")
+	@Qualifier("bcryptEncoder")
 	PasswordEncoder passwordEncoder() {
 		return new BCryptPasswordEncoder();
 	}

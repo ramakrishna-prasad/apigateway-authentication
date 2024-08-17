@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -23,6 +24,9 @@ import com.gateway.zuulserver.jwt.service.JwtService;
 import com.gateway.zuulserver.jwt.service.UserService;
 
 import jakarta.annotation.PostConstruct;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
 
 @RestController
 @RequestMapping("/api/v1/")
@@ -61,7 +65,14 @@ public class AuthController {
 		return ResponseEntity.ok(new JwtResponseDTO(jwt));
 	}
 
+	@PreAuthorize("hasRole('ROLE_ADMIN')")
+	@GetMapping("/user/details")
+	public ResponseEntity<?> getUserDetails(@RequestParam String username) {
+		User user = userService.findByUsername(username);
+		return ResponseEntity.ok(user);
+	}
 
+	
 	@PostMapping("/signup")
 	public ResponseEntity<?> registerUser(@RequestBody AuthRequestDTO authenticationRequest) {
 		if (userService.findByUsername(authenticationRequest.getUsername()) != null) {
